@@ -1,12 +1,29 @@
-import logo from './logo.svg';
 import './App.css';
-import Books from './components/Books';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { publicRoutes, privateRoutes } from './config/routes';
+import PrivateRoute from './components/PrivateRoute';
 
 function App() {
   return (
-    <div className="App">
-     <Books />
-    </div>
+    <Router>
+      <div className="App">
+       <Routes>
+          {
+            publicRoutes.map((route, index) => {
+              const PublicPage = route.component
+              return <Route key={index} path={route.path} element={<PublicPage />} />
+            })
+          }
+
+          {
+            privateRoutes.map((route, index) => {
+              const PrivatePage = route.component
+              return <Route key={index} path={route.path} element={<PrivateRoute><PrivatePage /></PrivateRoute>} />
+            })
+          }
+       </Routes>
+      </div>
+    </Router>
   );
 }
 

@@ -1,0 +1,36 @@
+.container {
+
+    a{
+        text-decoration: none;
+        color: #000;
+    }
+
+    .card {
+        box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+        max-width: 250px;
+        height: 450px;
+        text-align: center;
+        border-radius: 5px;
+
+        img{
+            width: 90%;
+            height: 75%;
+        }
+
+        .title{
+            font-weight: 400;
+            font-size: large;
+            margin: 0;
+        }
+
+        .author {
+            color: grey;
+            
+        }
+
+        .action{
+            display: flex;
+            justify-content: center;
+        }
+    }
+}
