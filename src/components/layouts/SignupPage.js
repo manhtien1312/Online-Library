@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import PopupModal from '../PopupModal';
+import Message from '../Message';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faXmark } from '@fortawesome/free-solid-svg-icons';
 import config from '../../config'
@@ -28,6 +30,10 @@ const SignupPage = () => {
         }
     }, [password, passwordAgain])
 
+    const[responseMessage, setResponseMessage] = useState("")
+    const toggleMessage = () => {
+        setResponseMessage("")
+    }
     const handleSubmit = () => {
 
         const requestBody = {
@@ -45,7 +51,8 @@ const SignupPage = () => {
                 'Content-Type': 'application/json; charset=UTF-8',
             }
         })
-            .then(navigate(config.route.login))
+            .then(res => res.json())
+            .then(data => setResponseMessage(data.message))
             .catch(err => console.log(err))
 
     }
@@ -84,6 +91,21 @@ const SignupPage = () => {
                     </div>
                 </div>
             </div >
+            {
+                responseMessage==='Email đã được sử dụng!' &&
+                <PopupModal content={<Message message={responseMessage} onClick={toggleMessage} />} onClick={toggleMessage} />
+            }
+            {
+                responseMessage==='Tạo tài khoản thành công.' &&
+                <PopupModal content={<Message message={responseMessage} 
+                                        onClick={() => {
+                                            toggleMessage()
+                                            navigate(config.route.login)
+                                        }} />} onClick={() => {
+                                            toggleMessage()
+                                            navigate(config.route.login)
+                                        }} />
+            }
         </div>
     );
 };
