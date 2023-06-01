@@ -19,13 +19,15 @@ const BookDetail = () => {
     const id = params.id;
     const navigate = useNavigate();
     
-    const [image, setImage] = useState(null);
-    const [imageFile, setImageFile] = useState(null);
+    const [image, setImage] = useState("");
     const onImageChange = (e) => {
-        if (e.target.files && e.target.files[0]) {
-            setImage(URL.createObjectURL(e.target.files[0]));
-            setImageFile(e.target.files[0]);
-        }
+            const reader = new FileReader();
+            reader.readAsDataURL(e.target.files[0]);
+            reader.onload = () => {
+                console.log(reader.result)
+                setImage(reader.result)
+                setBook({ ...book, bookCover: reader.result })
+            }
     }
     
     const [book, setBook] = useState({});
@@ -49,39 +51,42 @@ const BookDetail = () => {
         setEdit(true)
     }
 
-    const saveBook = () => {
-        fetch(`http://localhost:8080/book/save/${id}`, {
-                method: "PUT",
-                mode: "cors",
-                body: JSON.stringify(book),
-                headers: {
-                    'Content-Type': 'application/json; charset=UTF-8',
-                }
-            })
-                .catch((err) => console.log(err))
-        const data = new FormData();
-        data.append('File', imageFile)
-        fetch(`http://localhost:8080/book/upload/${id}`, {
-            method: 'POST',
-            body: data,
-        })
-            .then(navigate("/admin"))
-            .catch((err) => console.log(err))
-    }
-
     const [checkTitle, setCheckTitle] = useState(false);
     const [checkAuthor, setCheckAuthor] = useState(false);
     const [checkReleaseDay, setCheckReleaseDay] = useState(false);
-    const [checkImage, setCheckImage] = useState(false);
+    const [checkPrice, setCheckPrice] = useState();
     const [response, setResponse] = useState(false);
 
-    const addBook = () => {
+    const validate = () => {
         !book.title ? setCheckTitle(true) : setCheckTitle(false);
         !book.author ? setCheckAuthor(true) : setCheckAuthor(false);
         !book.releaseDay ? setCheckReleaseDay(true) : setCheckReleaseDay(false);
-        !imageFile ?  setCheckImage(true) : setCheckImage(false);
+        book.price==0 || !!book.price==false ? setCheckPrice(true) : setCheckPrice(false);
+    }
 
-        if (book.title && book.author && book.releaseDay && imageFile){
+    const saveBook = () => {
+        validate();
+
+        if (book.title && book.author && book.releaseDay && !!book.price!==false){
+            if(book.price != 0){
+                fetch(`http://localhost:8080/book/save/${id}`, {
+                    method: "PUT",
+                    mode: "cors",
+                    body: JSON.stringify(book),
+                    headers: {
+                        'Content-Type': 'application/json; charset=UTF-8',
+                    }
+                })
+                    .then(navigate("/admin"))
+                    .catch((err) => console.log(err))
+            }
+        }
+    }
+
+    const addBook = () => {
+        validate();
+
+        if (book.title && book.author && book.releaseDay && book.price!=0){
 
             fetch(`http://localhost:8080/book/add/${id}`, {
                 method: "POST",
@@ -95,22 +100,11 @@ const BookDetail = () => {
                 .then(data => {
                     if (data.message==="Sách đã tồn tại!"){
                         setResponse(true)
+                    } else {
+                        navigate("/admin")
                     }
                 })
                 .catch((err) => console.log(err))
-            
-            if(response===false){
-                const data = new FormData();
-                data.append('File', imageFile)
-                setTimeout(() => {
-                    fetch(`http://localhost:8080/book/upload/${id}`, {
-                        method: 'POST',
-                        body: data,
-                    })
-                        .then(navigate("/admin"))
-                        .catch((err) => console.log(err))
-                }, 2000)
-            }
         }
     }
 
@@ -127,7 +121,8 @@ const BookDetail = () => {
             <Header  adLogined={role==='admin' ? true : false} userLogined={role==='admin' ? false : true} 
                     to={role==='admin' ? config.route.admin : config.route.user}/>
             <div className={cx('title')}>
-                <h2>{id < 0? "Sách mới" : "Chi Tiết Sách"}</h2>
+                {role==='admin' ? <h2>{id < 0? "Sách mới" : "Chi Tiết Sách"}</h2> :
+                                    <h2>{book.title}</h2>} 
             </div>
             <div className={cx('container')}>
                 <div className={cx('book-info')}>
@@ -186,6 +181,13 @@ const BookDetail = () => {
                                         }
                                     </select><br />
                             </div>
+                            <div>
+                                Giá<span>*</span>
+                                    <input disabled={!edit && id>0} type="number" defaultValue={book.price}
+                                        onChange={e => setBook({ ...book, price: e.target.value })}
+                                        className="form-control" aria-label="Recipient's username" aria-describedby="button-addon2" />
+                                    {checkPrice && <p className={cx('validate')}>Giá sách không được để trống!</p>}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -194,33 +196,36 @@ const BookDetail = () => {
                     Ảnh bìa
                     <div className={cx('image')}>
                         <div className="input-group mb-3">
+                        {   role==='admin' &&
                             <input disabled={!edit && id>0} type="file" onChange={onImageChange} className="form-control" id="inputGroupFile02" />
+                        }
                         </div>
                         {   
                             id > 0 ?
-                            <img src={image? image : require(`../../../public/images/${id}.png`)} alt='book-cover'/> :
-                            image &&
-                            <img src={image} alt='book-cover'/>
+                            <img src={book.bookCover} alt='book-cover'/> :
+                            <img src={image!=="" ? image : ""} alt='book-cover'/>
                         }
-                        {checkImage && <p className={cx('validate')}>Bìa sách không được để trống!</p>}
                     </div>
                 </div>
             </div>
 
-            <div className={cx('action')}>
-                {
-                    !edit && id > 0 &&
-                    <button onClick={toggleEdit} type="button" className="btn btn-outline-info">Chỉnh Sửa</button>
-                }
-                {
-                    edit &&
-                    <button onClick={saveBook} type="button" className="btn btn-outline-success">Lưu</button>
-                }
-                {
-                    id < 0 && 
-                    <button onClick={toggleModal} type="button" className="btn btn-outline-primary">Thêm</button> 
-                }
-            </div>
+            {   
+                role==='admin' &&
+                <div className={cx('action')}>
+                    {
+                        !edit && id > 0 &&
+                        <button onClick={toggleEdit} type="button" className="btn btn-outline-info">Chỉnh Sửa</button>
+                    }
+                    {
+                        edit &&
+                        <button onClick={saveBook} type="button" className="btn btn-outline-success">Lưu</button>
+                    }
+                    {
+                        id < 0 && 
+                        <button onClick={toggleModal} type="button" className="btn btn-outline-primary">Thêm</button> 
+                    }
+                </div>
+            }
 
             {
                 modal &&

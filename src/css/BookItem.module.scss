@@ -30,7 +30,20 @@
 
         .action{
             display: flex;
-            justify-content: center;
+            justify-content: space-between;
+            margin: 0 10px;
+
+            button{
+                width: 110px;
+            }
+
+            p{
+                margin-top: 5px;
+                color: red;
+                font-size: large;
+                font-weight: 500;
+            }
+            
         }
     }
 }

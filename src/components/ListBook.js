@@ -131,6 +131,7 @@ const ListBook = ({ adLogined, userLogined }) => {
                                 <th>Thể Loại</th>
                                 <th>Ngày Phát Hành</th>
                                 <th>Số Trang</th>
+                                <th>Giá</th>
                                 <th>Đã Bán</th>
                                 <th></th>
                             </tr>
@@ -146,6 +147,7 @@ const ListBook = ({ adLogined, userLogined }) => {
                                             <td>{book.category}</td>
                                             <td>{book.releaseDay}</td>  
                                             <td>{book.page}</td>  
+                                            <td>{book.price}</td>
                                             <td>{book.sold}</td>  
                                             <td>
                                                 <Link to={`/book/${book.id}`}><button className="btn btn-primary">Xem</button></Link>

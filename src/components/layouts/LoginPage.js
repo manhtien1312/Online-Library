@@ -16,6 +16,9 @@ const LoginPage = () => {
 
     const navigate = useNavigate();
 
+
+    const [modal, setModal] = useState(false)
+
     const sendLoginRequest = () => {
 
         const requestBody = {
@@ -36,10 +39,15 @@ const LoginPage = () => {
             })
                 .then(res => res.json())
                 .then(data => {
-                    sessionStorage.setItem("user", data.name);
-                    sessionStorage.setItem("id", data.idAccount)
-                    sessionStorage.setItem("role", "admin")
-                    navigate(config.route.admin)
+                    if (data.idAccount===0){
+                        setModal(true)
+                    } else {
+                        setModal(false)
+                        sessionStorage.setItem("user", data.name);
+                        sessionStorage.setItem("id", data.idAccount)
+                        sessionStorage.setItem("role", "admin")
+                        navigate(config.route.admin)
+                    }
                 })
                 .catch(err => console.log(err))
         } else {
@@ -53,15 +61,22 @@ const LoginPage = () => {
             })
                 .then(res => res.json())
                 .then(data => {
-                    sessionStorage.setItem("user", data.name);
-                    sessionStorage.setItem("id", data.idAccount)
-                    sessionStorage.setItem("role", "user")
-                    navigate(config.route.user)
+                    if (data.idAccount===0){
+                        setModal(true)
+                    } else {
+                        setModal(false)
+                        sessionStorage.setItem("user", data.name);
+                        sessionStorage.setItem("id", data.idAccount)
+                        sessionStorage.setItem("role", "user")
+                        navigate(config.route.user)
+                    }
                 })
                 .catch(err => console.log(err))
         }
 
     }
+
+
 
     return (
         <div className={cx('body')}>
@@ -77,13 +92,18 @@ const LoginPage = () => {
                         </label>
                         <br></br>
                         <label>
-                            <input type="password" placeholder='Mật Khẩu' onChange={e => setPassword(e.target.value)} />
+                            <input type="password" placeholder='Mật Khẩu' onChange={e => setPassword(e.target.value)}
+                                onKeyDown={e => {if(e.key === 'Enter') sendLoginRequest()}} />
                         </label>
                         <br></br>
+                        {
+                            modal &&
+                            <p>Email hoặc mật khẩu không chính xác!</p>
+                        }
                         Chưa có tài khoản? <Link to={config.route.signup}>Đăng ký</Link>
                     </div>
                     <div className={cx('btn')}>
-                        <button type="submit" onClick={sendLoginRequest}>Đăng nhập</button>
+                        <button type="submit" onClick={sendLoginRequest} >Đăng nhập</button>
                     </div>
                 </div>
             </div >
