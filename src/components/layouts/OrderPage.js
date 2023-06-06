@@ -1,22 +1,22 @@
 import React from 'react';
 import Header from '../Header';
-import ListBook from '../ListBook';
-import config from '../../config'
+import ListOrderedBook from '../ListOrderedBook';
+import config from '../../config';
 
 import classNames from 'classnames/bind';
 import styles from '../../css/Layout.module.scss';
 
-const cx = classNames.bind(styles)
+const cx = classNames.bind(styles);
 
-const UserPage = () => {
+const OrderPage = () => {
     return (
         <div>
             <Header adLogined={false} userLogined={true} to={config.route.user}/>
             <div className={cx('work-space')}>
-                <ListBook adLogined={false} userLogined={true} />
+                <ListOrderedBook />
             </div>
         </div>
     );
 };
 
-export default UserPage;
+export default OrderPage;

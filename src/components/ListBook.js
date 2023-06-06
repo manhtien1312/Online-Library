@@ -76,6 +76,18 @@ const ListBook = ({ adLogined, userLogined }) => {
         setModal(!modal)
     }
 
+    const formatNum = (num) => {
+        return num.toString().padStart(2, '0');
+    }
+    const formatDate = (dateStr) => {
+        const date = new Date(dateStr);
+        return [
+            formatNum(date.getDate()),
+            formatNum(date.getMonth() + 1),
+            date.getFullYear(),
+        ].join('-')
+    }
+
     return (
         <div className={cx('container')}>
             <div className={cx('title')}>
@@ -142,10 +154,10 @@ const ListBook = ({ adLogined, userLogined }) => {
                                 books.map((book) => {
                                     return (
                                         <tr key={book.id}>
-                                            <td>{book.title}</td>
+                                            <td className={cx('book-title')}>{book.title}</td>
                                             <td>{book.author}</td>
                                             <td>{book.category}</td>
-                                            <td>{book.releaseDay}</td>  
+                                            <td>{formatDate(book.releaseDay)}</td>  
                                             <td>{book.page}</td>  
                                             <td>{book.price}</td>
                                             <td>{book.sold}</td>  
@@ -167,7 +179,7 @@ const ListBook = ({ adLogined, userLogined }) => {
 
             {
                 modal &&
-                <PopupModal content={<Confirm onClick={toggleModal} confirm={deleteBook} action="xóa" />} onClick={toggleModal}/>
+                <PopupModal content={<Confirm onClick={toggleModal} confirm={deleteBook} action="Bạn muốn xóa sách?" />} onClick={toggleModal}/>
             }
         </div>
     );

@@ -13,13 +13,13 @@ function Confirm({ onClick, confirm, action }) {
             <button id={cx('exit')} onClick={onClick}>
                 <FontAwesomeIcon icon={faXmark} />
             </button>
-            <h3>Bạn muốn {action}?</h3>
+            <h3>{action}</h3>
             <div className={cx('btn')}>
                 <button onClick={() => {
                     confirm()
                     onClick()
-                }}>Xác nhận</button>
-                <button onClick={onClick}>Hủy</button>
+                }}>{action==='Đặt mua thành công!' ? 'Xem đơn hàng' : 'Xác nhận'}</button>
+                <button onClick={onClick}>{action==='Đặt mua thành công!' ? 'Tiếp tục mua' : 'Hủy'}</button>
             </div>
         </div>
     );

@@ -1,7 +1,8 @@
 import React from 'react';
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCartShopping, faMagnifyingGlass, faPenToSquare, faRightToBracket } from '@fortawesome/free-solid-svg-icons';
+import { faCartShopping, faPenToSquare, faRightToBracket } from '@fortawesome/free-solid-svg-icons';
 import { faRightFromBracket, faUser, faKey } from "@fortawesome/free-solid-svg-icons";
 import Tippy from '@tippyjs/react/headless';
 import Popper from './Popper'
@@ -10,7 +11,6 @@ import config from '../config'
 
 import classNames from 'classnames/bind';
 import styles from '../css/Header.module.scss'
-import { Link } from 'react-router-dom';
 
 const cx = classNames.bind(styles)
 
@@ -98,9 +98,11 @@ const Header = ({ adLogined, userLogined, to }) => {
                                 </button>
                             </Tippy>
     
-                            <button className={cx('cart')}>
-                                <FontAwesomeIcon icon={faCartShopping} />
-                            </button>
+                            <Link to={config.route.order}>
+                                <button className={cx('cart')}>
+                                    <FontAwesomeIcon icon={faCartShopping} />
+                                </button>
+                            </Link>
                         </div>
                     </div>
                 }

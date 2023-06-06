@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { Rating } from 'react-simple-star-rating'
 import Header from '../Header';
 import PopupModal from '../PopupModal';
 import Confirm from '../Confirm';
 import Message from '../Message';
+import Comment from '../Comment';
 import config from '../../config';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faMinus, faPlus } from '@fortawesome/free-solid-svg-icons';
 
 import classNames from 'classnames/bind';
 import styles from '../../css/BookDetail.module.scss';
@@ -14,6 +18,7 @@ const cx = classNames.bind(styles)
 const BookDetail = () => {
 
     const role = sessionStorage.getItem("role");
+    const idUser = sessionStorage.getItem("id");
 
     const params = useParams();
     const id = params.id;
@@ -21,29 +26,29 @@ const BookDetail = () => {
     
     const [image, setImage] = useState("");
     const onImageChange = (e) => {
-            const reader = new FileReader();
-            reader.readAsDataURL(e.target.files[0]);
-            reader.onload = () => {
-                console.log(reader.result)
-                setImage(reader.result)
-                setBook({ ...book, bookCover: reader.result })
-            }
+        const reader = new FileReader();
+        reader.readAsDataURL(e.target.files[0]);
+        reader.onload = () => {
+            console.log(reader.result)
+            setImage(reader.result)
+            setBook({ ...book, bookCover: reader.result })
+        }
     }
     
     const [book, setBook] = useState({});
     useEffect(() => {
         fetch(`http://localhost:8080/book/${id}`)
-        .then((res) => res.json())
-        .then((data) => setBook(data))
-        .catch((err) => console.log(err))
+            .then((res) => res.json())
+            .then((data) => setBook(data))
+            .catch((err) => console.log(err))
     }, []);
     
     const [categories, setCategories] = useState([]);
     useEffect(() => {
         fetch("http://localhost:8080/book-categories")
-        .then(res => res.json())
-        .then(data => setCategories(data))
-        .catch(err => console.log(err))
+            .then(res => res.json())
+            .then(data => setCategories(data))
+            .catch(err => console.log(err))
     }, []);
     
     const [edit, setEdit] = useState(false)
@@ -55,7 +60,7 @@ const BookDetail = () => {
     const [checkAuthor, setCheckAuthor] = useState(false);
     const [checkReleaseDay, setCheckReleaseDay] = useState(false);
     const [checkPrice, setCheckPrice] = useState();
-    const [response, setResponse] = useState(false);
+    const [addResponse, setAddResponse] = useState(false);
 
     const validate = () => {
         !book.title ? setCheckTitle(true) : setCheckTitle(false);
@@ -99,7 +104,7 @@ const BookDetail = () => {
                 .then(res => res.json())
                 .then(data => {
                     if (data.message==="Sách đã tồn tại!"){
-                        setResponse(true)
+                        setAddResponse(true)
                     } else {
                         navigate("/admin")
                     }
@@ -113,17 +118,102 @@ const BookDetail = () => {
         setModal(!modal)
     }
     const toggleMessage = () => {
-        setResponse(false)
+        setAddResponse(false)
+    }
+    const toggleOrderMessage = () => {
+        setOrderResponse(false)
+    }
+
+    const [buyQuantity, setBuyQuantity] = useState(1);
+    const [orderResponse, setOrderResponse] = useState(false);
+    const orderBook = () => {
+        const requestBody = {
+            idOrder: 0,
+            idBook: id,
+            idUser: idUser,
+            bookTitle: book.title,
+            bookCover: book.bookCover,
+            quantity: buyQuantity,
+            time: new Date(),
+            total: buyQuantity * book.price,
+            payment: "Chưa thanh toán",
+        }
+
+        fetch('http://localhost:8080/order', {
+            method: "POST",
+            mode: "cors",
+            body: JSON.stringify(requestBody),
+            headers: {
+                'Content-Type': 'application/json; charset=UTF-8',
+            }
+        })  
+            .then(res => res.json())
+            .then(data => {
+                if(data.message==='Thêm đơn thành công!'){
+                    setOrderResponse(true)
+                }
+            })
+            .catch(err => console.log(err))
+    }
+
+    const [allRating, setAllRating] = useState([]);
+    useEffect(() => {
+        fetch(`http://localhost:8080/book/${id}/all-rating`)
+        .then(res => res.json())
+        .then(data => setAllRating(data))
+        .catch(err => console.log(err))
+    }, [])
+
+    const [stars, setStars] = useState(0);
+    useEffect(() => {
+        fetch(`http://localhost:8080/book/${id}/${idUser}/rating`)
+            .then(res => res.json())
+            .then(data => {
+                setStars(data.stars)
+            })
+            .catch(err => console.log(err))
+    }, [])
+
+    const handleRating = (rate) => {
+        
+        const requestBody = {
+            idBook: id,
+            idUser: idUser,
+            stars: rate,
+        }
+
+        fetch('http://localhost:8080/book/rating', {
+                method: "POST",
+                mode: "cors",
+                body: JSON.stringify(requestBody),
+                headers: {
+                    'Content-Type': 'application/json; charset=UTF-8',
+                }
+            })  
+                .catch(err => console.log(err))
+
     }
 
     return (
         <div>
-            <Header  adLogined={role==='admin' ? true : false} userLogined={role==='admin' ? false : true} 
-                    to={role==='admin' ? config.route.admin : config.route.user}/>
             <div className={cx('title')}>
                 {role==='admin' ? <h2>{id < 0? "Sách mới" : "Chi Tiết Sách"}</h2> :
                                     <h2>{book.title}</h2>} 
             </div>
+
+            {   role==="user" &&
+                <div className={cx('rating-star')}>
+                    <Rating
+                        size={25}
+                        initialValue={allRating.reduce((total, rating) => total + rating.stars, 0) / allRating.length}
+                        allowFraction
+                        readonly
+                    />
+                    <p className={cx('total-rating')}>{allRating.length} đánh giá</p>
+                    <p>Đã bán: {book.sold}</p>
+                </div>
+            }
+
             <div className={cx('container')}>
                 <div className={cx('book-info')}>
                     <div className={cx('input')}>
@@ -189,8 +279,39 @@ const BookDetail = () => {
                                     {checkPrice && <p className={cx('validate')}>Giá sách không được để trống!</p>}
                             </div>
                         </div>
+                        <br/>
+                    {   role==='user' &&
+                        <div className={cx('buy')}>
+                            Số Lượng
+                            <div className={cx('quantity')}>
+                                <button 
+                                    onClick={(e) => {
+                                        e.preventDefault()
+                                        setBuyQuantity(buyQuantity-1)
+                                    }}>
+                                    <FontAwesomeIcon icon={faMinus} />
+                                </button>
+                                <input type='number' min={1} value={buyQuantity} onChange={e => setBuyQuantity(e.target.value)} />
+                                <button onClick={(e) => {
+                                        e.preventDefault()
+                                        setBuyQuantity(buyQuantity+1)
+                                    }}>
+                                    <FontAwesomeIcon icon={faPlus} />
+                                </button>
+                            </div>
+                            <div className={cx('buy-button')}>
+                                <button 
+                                    className='btn btn-danger'
+                                    onClick={(e) => {
+                                        e.preventDefault()
+                                        orderBook()
+                                    }}
+                                >Đặt Mua</button>
+                            </div>
+                        </div>
+                    }
                     </div>
-                </div>
+                </div>  
 
                 <div className={cx('book-image')}>
                     Ảnh bìa
@@ -228,12 +349,41 @@ const BookDetail = () => {
             }
 
             {
+                role==='user' && 
+                <div className={cx('comment')}>
+                    <div className={cx('user-rating')}>
+                    <p>Đánh giá của bạn</p> <span>
+                        <Rating
+                            size={20}
+                            initialValue={stars}
+                            onClick={handleRating}
+                        /></span>
+                    </div>
+                    <Comment 
+                        idBook={id}
+                    />
+                </div>
+            }
+
+            <Header  adLogined={role==='admin' ? true : false} userLogined={role==='admin' ? false : true} 
+                    to={role==='admin' ? config.route.admin : config.route.user}/>
+
+            {
                 modal &&
-                <PopupModal content={<Confirm onClick={toggleModal} confirm={addBook} action='thêm sách' />} onClick={toggleModal} />
+                <PopupModal content={<Confirm onClick={toggleModal} confirm={addBook} action='Bạn muốn thêm sách?' />} onClick={toggleModal} />
             }
             {
-                response &&
+                addResponse &&
                 <PopupModal content={<Message message="Sách đã tồn tại!" onClick={toggleMessage} />} onClick={toggleMessage} />
+            }
+            {
+                orderResponse &&
+                <PopupModal content={<Confirm onClick={() => {
+                                                toggleOrderMessage()
+                                            }} confirm={() => {
+                                                toggleOrderMessage()
+                                                navigate('/ordered')
+                                            }} action='Đặt mua thành công!' />} onClick={toggleOrderMessage} />
             }
         </div>
     );
